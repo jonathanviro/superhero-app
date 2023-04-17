@@ -1,11 +1,13 @@
 package com.javr.superhero_app
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.javr.superhero_app.DetailSuperhero.Companion.EXTRA_ID
 import com.javr.superhero_app.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +15,6 @@ import kotlinx.coroutines.launch
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -40,7 +41,7 @@ class MainActivity : AppCompatActivity() {
             override fun onQueryTextChange(newText: String?): Boolean = false
         })
 
-        adapter = SuperheroAdapter()
+        adapter = SuperheroAdapter { superheroId -> navigateToDetail(superheroId) }
         binding.rvSuperhero.setHasFixedSize(true)
         binding.rvSuperhero.layoutManager = LinearLayoutManager(this)
         binding.rvSuperhero.adapter = adapter
@@ -51,9 +52,8 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             val myResponse: Response<SuperheroDataResponse> = retrofit.create(ApiService::class.java).getSuperheroes(query)
             if (myResponse.isSuccessful){
-                Log.i("JONA", "FUNCIONA")
                 val response: SuperheroDataResponse? = myResponse.body()
-                if(response != null){
+                if(response != null ){
                     Log.i("JONA", response.toString())
                     runOnUiThread{
                         adapter.updateList(response.superheroes)
@@ -72,6 +72,11 @@ class MainActivity : AppCompatActivity() {
             .baseUrl("https://superheroapi.com/api/6114729181951939/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
 
+    private fun navigateToDetail(id: String){
+        val intent = Intent(this, DetailSuperhero::class.java)
+        intent.putExtra(EXTRA_ID, id)
+        startActivity(intent)
     }
 }
